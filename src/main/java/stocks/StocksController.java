@@ -7,8 +7,8 @@ package stocks;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.BeanToCsv;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
-import org.slf4j.*;
-import org.springframework.ui.Model;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import yahoofinance.Stock;
@@ -23,21 +23,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * Controller mapping to parent URL. Read txt file with stock codes and gets stock data details from
+ * Yahoo finance API for those stock codes
+ */
 @RestController
 public class StocksController {
 
     private static final Logger logger = LoggerFactory.getLogger(StocksController.class);
 
     @RequestMapping("/")
-    public String stocksInformation(Model model) {
+    public String stocksInformation() {
         try {
+            // Read data from input text file
             Stream<String> streams = Files.lines(Paths.get("/Users/tanvi.bhonsle/Downloads/Stocks.txt"));
 
+            //Create csv for output data
             String csv = "/Users/tanvi.bhonsle/Downloads/output.csv";
+
             CSVWriter writer = new CSVWriter(new FileWriter(csv));
-
+            //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
-
             final Integer[] i = {1};
             streams.forEach(stream -> {
                 StockInformation stockInformation = new StockInformation();
@@ -46,6 +52,7 @@ public class StocksController {
                 Stock stock = null;
                 try {
                     stock = YahooFinance.get(stream);
+                    logger.debug("finance data fetched for stock code: " + stream);
                 } catch (IOException e) {
                     System.out.print("Error while fetching finance data");
                 }
