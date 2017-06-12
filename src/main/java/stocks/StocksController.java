@@ -7,6 +7,7 @@ package stocks;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.BeanToCsv;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
+import org.slf4j.*;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,10 +26,12 @@ import java.util.stream.Stream;
 @RestController
 public class StocksController {
 
-    @RequestMapping(value = "/")
-    public void stocksInformation(Model model) {
+    private static final Logger logger = LoggerFactory.getLogger(StocksController.class);
+
+    @RequestMapping("/")
+    public String stocksInformation(Model model) {
         try {
-            Stream<String> streams = Files.lines(Paths.get("/Users/tanvi.bhonsle/Downloads/Stocks1.txt"));
+            Stream<String> streams = Files.lines(Paths.get("/Users/tanvi.bhonsle/Downloads/Stocks.txt"));
 
             String csv = "/Users/tanvi.bhonsle/Downloads/output.csv";
             CSVWriter writer = new CSVWriter(new FileWriter(csv));
@@ -69,13 +72,16 @@ public class StocksController {
 
             bc.write(mappingStrategy,writer,stockData);
             System.out.println("CSV File written successfully!!!");
+            logger.debug("Welcome {}", "testing");
 
             writer.close();
 
-            model.addAttribute("message", "CSV File written successfully!!!");
+//            model.addAttribute("message", "CSV File written successfully!!!");
+            return "CSV File written successfully!!!";
         }
         catch(IOException ex) {
             System.out.print("Error");
+            return "Error";
         }
     }
 
