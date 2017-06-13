@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
 /**
@@ -68,10 +69,11 @@ public class StocksController {
                     }
                 });
             });
-            List futures = executor.invokeAll(callableList);
-//            for(Object future : futures){
-//                System.out.println("future.get = " + future.getClass().getName());
-//            }
+            List<Future<String>> futures = executor.invokeAll(callableList);
+
+            for(Future future : futures){
+                System.out.println("Status of future  = " + future.get());
+            }
             executor.shutdown();
 
             //Create csv for output data
