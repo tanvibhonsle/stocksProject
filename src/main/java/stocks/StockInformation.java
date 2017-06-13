@@ -6,7 +6,6 @@ import java.math.BigDecimal;
  * Created by tanvi.bhonsle on 12/06/17.
  */
 public class StockInformation {
-//    private Integer Id;
     private String stockCode;
     private BigDecimal currentPrice;
     private BigDecimal yearHigh;
@@ -28,14 +27,6 @@ public class StockInformation {
     public void setStockCode(String stockCode) {
         this.stockCode = stockCode;
     }
-
-//    public Integer getId() {
-//        return Id;
-//    }
-//
-//    public void setId(Integer id) {
-//        Id = id;
-//    }
 
     public BigDecimal getYearHigh() {
         return yearHigh;
