@@ -43,15 +43,10 @@ public class StocksController {
     public String stocksInformation() throws InterruptedException {
         try {
             // Read data from input text file
-            Stream<String> streams = Files.lines(Paths.get("/Users/tanvi.bhonsle/Downloads/Stocks1.txt"));
+            Stream<String> streams = Files.lines(Paths.get("/Users/tanvi.bhonsle/Downloads/Stocks.txt"));
 
-            //Create csv for output data
-            String csv = "/Users/tanvi.bhonsle/Downloads/output1.csv";
-
-            CSVWriter writer = new CSVWriter(new FileWriter(csv));
             //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
-//            final Integer[] idCounter = {1};
 
             ExecutorService executor = Executors.newFixedThreadPool(10);
             Collection callableList = new LinkedList<>();
@@ -68,64 +63,41 @@ public class StocksController {
                             stockInformation = addErrorDataToStockInformation(stockInformation);
                         }
                         stockData.add(stockInformation);
-//                        StockInformation stockInformation = new StockInformation();
-////                        stockInformation.setId(idCounter[0]++);
-//                        stockInformation.setStockCode(stream);
-//                        Stock stock = null;
-//                        try {
-//                            stock = YahooFinance.get(stream);
-//                            logger.debug("finance data fetched for stock code: " + stream);
-//                        } catch (IOException e) {
-//                            System.out.print("Error while fetching finance data");
-//                        }
-//                        BigDecimal price = stock.getQuote().getPrice();
-//                        stockInformation.setCurrentPrice(price);
-//                        BigDecimal yearHigh = stock.getQuote().getYearHigh();
-//                        stockInformation.setYearHigh(yearHigh);
-//                        BigDecimal yearLow = stock.getQuote().getYearLow();
-//                        stockInformation.setYearLow(yearLow);
-//                        BigDecimal oneYearTargetPrice = stock.getStats().getOneYearTargetPrice();
-//                        stockInformation.setTargetPrice(oneYearTargetPrice);
-
-
                         return true;
                     }
                 });
             });
             List futures = executor.invokeAll(callableList);
-
             executor.shutdown();
 
+            //Create csv for output data
+            String csv = "/Users/tanvi.bhonsle/Downloads/output.csv";
+            CSVWriter writer = new CSVWriter(new FileWriter(csv));
             BeanToCsv bc = new BeanToCsv();
             ColumnPositionMappingStrategy mappingStrategy = new ColumnPositionMappingStrategy();
-
             mappingStrategy.setType(StockInformation.class);
-
             String[] columns = new String[]{"stockCode","currentPrice","targetPrice", "yearHigh", "yearLow"};
-
             mappingStrategy.setColumnMapping(columns);
-
             bc.write(mappingStrategy,writer,stockData);
-            System.out.println("CSV File written successfully!!!");
-            logger.debug("Welcome {}", "testing");
+
+            logger.debug("CSV File written successfully!!!");
+            System.out.print("CSV File written successfully!!!");
 
             writer.close();
-
-//            model.addAttribute("message", "CSV File written successfully!!!");
             return "CSV File written successfully!!!";
-        }
-        catch(IOException ex) {
-            System.out.print("Error");
-            return "Error";
         } catch(Exception ex) {
-            System.out.print("Error");
-            return "Error in threading";
+            logger.error(ex.getMessage());
+            logger.error("Error in StocksController");
+            return "Error";
         }
     }
 
+    /**
+     * @param stockInformation
+     * @return stockInformation
+     */
     private StockInformation addErrorDataToStockInformation(StockInformation stockInformation) {
-        System.out.print("in add ErrorData");
-//        StockInformation stockInformation = new StockInformation();
+        logger.debug(" Populating error data for stockcode " + stockInformation.getStockCode());
         stockInformation.setCurrentPrice(ERROR_VALUE);
         stockInformation.setTargetPrice(ERROR_VALUE);
         stockInformation.setYearHigh(ERROR_VALUE);
@@ -133,9 +105,13 @@ public class StocksController {
         return stockInformation;
     }
 
+    /**
+     * @param stock
+     * @param stockInformation
+     * @return stockInformation
+     */
     private StockInformation getRequiredStockData(Stock stock, StockInformation stockInformation) {
-        System.out.print("in add getRequiredStockData");
-//        StockInformation stockInformation = new StockInformation();
+        logger.debug(" Creating beans for populating csv for stockCode " + stockInformation.getStockCode());
         BigDecimal price = stock.getQuote().getPrice();
         if (price != null) {
             stockInformation.setCurrentPrice(price);
@@ -169,12 +145,12 @@ public class StocksController {
      */
     private Stock getStockInformationFromYahoo(String stream) {
         try {
-            System.out.print("in add getStockInfromationfrom Yahoo");
             Stock stock = YahooFinance.get(stream);
             logger.debug("finance data fetched for stock code: " + stream);
             return stock;
         } catch (IOException e) {
-            System.out.print("Error while fetching finance data");
+            logger.error("Error while fetching finance data");
+            logger.error(e.getMessage());
             return null;
         }
     }
