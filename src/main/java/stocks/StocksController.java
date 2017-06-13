@@ -21,10 +21,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -50,12 +47,12 @@ public class StocksController {
             //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
 
+            //Executor service for parallel processing of requests to Yahoo finance
             ExecutorService executor = Executors.newFixedThreadPool(20);
-            Set<Callable<String>> callableList = new HashSet<Callable<String>>();
+            List<Future<String>> futures = new ArrayList<>();
             streams.forEach(stream -> {
-                callableList.add(new Callable<String>() {
-                    @Override
-                    public String call() throws Exception{
+                Future future = executor.submit(new Runnable() {
+                    public void run() {
                         Stock stock = getStockInformationFromYahoo(stream);
                         StockInformation stockInformation = new StockInformation();
                         stockInformation.setStockCode(stream);
@@ -64,16 +61,16 @@ public class StocksController {
                         } else {
                             stockInformation = addErrorDataToStockInformation(stockInformation);
                         }
-                        stockData.add(stockInformation);
-                        return "Done";
-                    }
+                            stockData.add(stockInformation);
+                        }
                 });
+                futures.add(future);
             });
-            List<Future<String>> futures = executor.invokeAll(callableList);
 
             for(Future future : futures){
                 System.out.println("Status of future  = " + future.get());
             }
+
             executor.shutdown();
 
             //Create csv for output data
