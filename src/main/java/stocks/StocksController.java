@@ -21,9 +21,9 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,11 +50,11 @@ public class StocksController {
             List<StockInformation> stockData = new ArrayList<>();
 
             ExecutorService executor = Executors.newFixedThreadPool(20);
-            Collection callableList = new LinkedList<>();
+            Set<Callable<String>> callableList = new HashSet<Callable<String>>();
             streams.forEach(stream -> {
-                callableList.add(new Callable() {
+                callableList.add(new Callable<String>() {
                     @Override
-                    public Boolean call() {
+                    public String call() throws Exception{
                         Stock stock = getStockInformationFromYahoo(stream);
                         StockInformation stockInformation = new StockInformation();
                         stockInformation.setStockCode(stream);
@@ -64,11 +64,14 @@ public class StocksController {
                             stockInformation = addErrorDataToStockInformation(stockInformation);
                         }
                         stockData.add(stockInformation);
-                        return true;
+                        return "Done";
                     }
                 });
             });
             List futures = executor.invokeAll(callableList);
+//            for(Object future : futures){
+//                System.out.println("future.get = " + future.getClass().getName());
+//            }
             executor.shutdown();
 
             //Create csv for output data
