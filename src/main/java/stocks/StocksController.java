@@ -9,6 +9,7 @@ import com.opencsv.bean.BeanToCsv;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,11 +39,17 @@ public class StocksController {
 
     private static final BigDecimal ERROR_VALUE = BigDecimal.valueOf(-1.0);
 
+    @Value("${app.inputFilePath}")
+    private String inputFilePath;
+
+    @Value("${app.outputFilePath}")
+    private String outputFilePath;
+
     @RequestMapping("/")
     public String stocksInformation() {
         try {
             // Read data from input text file
-            Stream<String> streams = Files.lines(Paths.get("/Users/tanvi.bhonsle/Downloads/Stocks.txt"));
+            Stream<String> streams = Files.lines(Paths.get(inputFilePath));
 
             //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
@@ -74,8 +81,7 @@ public class StocksController {
             executor.shutdown();
 
             //Create csv for output data
-            String csv = "/Users/tanvi.bhonsle/Downloads/output.csv";
-            CSVWriter writer = new CSVWriter(new FileWriter(csv));
+            CSVWriter writer = new CSVWriter(new FileWriter(outputFilePath));
             BeanToCsv bc = new BeanToCsv();
             ColumnPositionMappingStrategy mappingStrategy = new ColumnPositionMappingStrategy();
             mappingStrategy.setType(StockInformation.class);
