@@ -49,12 +49,12 @@ public class StocksController {
             //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
 
-            ExecutorService executor = Executors.newFixedThreadPool(10);
+            ExecutorService executor = Executors.newFixedThreadPool(20);
             Collection callableList = new LinkedList<>();
             streams.forEach(stream -> {
                 callableList.add(new Callable() {
                     @Override
-                    public Boolean call() throws Exception {
+                    public Boolean call() {
                         Stock stock = getStockInformationFromYahoo(stream);
                         StockInformation stockInformation = new StockInformation();
                         stockInformation.setStockCode(stream);
