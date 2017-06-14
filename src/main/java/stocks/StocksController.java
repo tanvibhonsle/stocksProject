@@ -22,7 +22,10 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -56,10 +59,11 @@ public class StocksController {
 
             //Executor service for parallel processing of requests to Yahoo finance
             ExecutorService executor = Executors.newFixedThreadPool(20);
-            List<Future<String>> futures = new ArrayList<>();
+            Set<Callable<String>> callableList = new HashSet<Callable<String>>();
             streams.forEach(stream -> {
-                Future future = executor.submit(new Runnable() {
-                    public void run() {
+                callableList.add(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
                         Stock stock = getStockInformationFromYahoo(stream);
                         StockInformation stockInformation = new StockInformation();
                         stockInformation.setStockCode(stream);
@@ -68,20 +72,17 @@ public class StocksController {
                         } else {
                             stockInformation = addErrorDataToStockInformation(stockInformation);
                         }
-                            stockData.add(stockInformation);
-                        }
+                        stockData.add(stockInformation);
+                        return "Done";
+                    }
                 });
-                futures.add(future);
             });
-
-            for(Future future : futures){
-                System.out.println("Status of future  = " + future.get());
-            }
-
+            List<Future<String>> futures = executor.invokeAll(callableList);
             executor.shutdown();
 
             //Create csv for output data
-            CSVWriter writer = new CSVWriter(new FileWriter(outputFilePath));
+            CSVWriter writer = null;
+            writer = new CSVWriter(new FileWriter(outputFilePath));
             BeanToCsv bc = new BeanToCsv();
             ColumnPositionMappingStrategy mappingStrategy = new ColumnPositionMappingStrategy();
             mappingStrategy.setType(StockInformation.class);
@@ -90,8 +91,7 @@ public class StocksController {
             bc.write(mappingStrategy,writer,stockData);
             writer.close();
 
-            logger.debug("CSV File written successfully!!!");
-
+            logger.info("CSV File written successfully!!!");
             return "CSV File written successfully!!!";
         } catch(Exception ex) {
             logger.error(ex.getMessage());
