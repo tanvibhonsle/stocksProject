@@ -88,10 +88,10 @@ public class StocksController {
             String[] columns = new String[]{"stockCode","currentPrice","targetPrice", "yearHigh", "yearLow"};
             mappingStrategy.setColumnMapping(columns);
             bc.write(mappingStrategy,writer,stockData);
+            writer.close();
 
             logger.debug("CSV File written successfully!!!");
 
-            writer.close();
             return "CSV File written successfully!!!";
         } catch(Exception ex) {
             logger.error(ex.getMessage());
