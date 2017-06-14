@@ -42,6 +42,8 @@ public class StocksController {
 
     private static final BigDecimal ERROR_VALUE = BigDecimal.valueOf(-1.0);
 
+    private static ExecutorService executor = Executors.newFixedThreadPool(20);
+
     @Value("${app.inputFilePath}")
     private String inputFilePath;
 
@@ -58,7 +60,6 @@ public class StocksController {
             List<StockInformation> stockData = new ArrayList<>();
 
             //Executor service for parallel processing of requests to Yahoo finance
-            ExecutorService executor = Executors.newFixedThreadPool(20);
             Set<Callable<String>> callableList = new HashSet<Callable<String>>();
             inputStockCodesStream.forEach(inputStockCode -> {
                 callableList.add(new Callable<String>() {
@@ -68,7 +69,7 @@ public class StocksController {
                         StockInformation stockInformation = new StockInformation();
                         stockInformation.setStockCode(inputStockCode);
                         if (stock != null) {
-                            stockInformation = getRequiredStockData(stock, stockInformation);
+                            stockInformation = mapStockInformationToBean(stock, stockInformation);
                         } else {
                             stockInformation = addErrorDataToStockInformation(stockInformation);
                         }
@@ -124,7 +125,7 @@ public class StocksController {
      * @param stockInformation
      * @return stockInformation
      */
-    private StockInformation getRequiredStockData(Stock stock, StockInformation stockInformation) {
+    private StockInformation mapStockInformationToBean(Stock stock, StockInformation stockInformation) {
         try {
             logger.debug(" Creating beans for populating csv for stockCode " + stockInformation.getStockCode());
             BigDecimal price = stock.getQuote().getPrice();
@@ -154,7 +155,7 @@ public class StocksController {
             return stockInformation;
         } catch (Exception ex) {
             logger.error(ex.getMessage());
-            logger.error("Error in getRequiredStockData for stockCode " + stockInformation.getStockCode());
+            logger.error("Error in mapStockInformationToBean for stockCode " + stockInformation.getStockCode());
             return null;
         }
     }
