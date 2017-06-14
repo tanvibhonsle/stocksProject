@@ -52,7 +52,7 @@ public class StocksController {
     public String stocksInformation() {
         try {
             // Read data from input text file
-            Stream<String> streams = Files.lines(Paths.get(inputFilePath));
+            Stream<String> inputStockCodesStream = Files.lines(Paths.get(inputFilePath));
 
             //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
@@ -60,13 +60,13 @@ public class StocksController {
             //Executor service for parallel processing of requests to Yahoo finance
             ExecutorService executor = Executors.newFixedThreadPool(20);
             Set<Callable<String>> callableList = new HashSet<Callable<String>>();
-            streams.forEach(stream -> {
+            inputStockCodesStream.forEach(inputStockCode -> {
                 callableList.add(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
-                        Stock stock = getStockInformationFromYahoo(stream);
+                        Stock stock = getStockInformationFromYahoo(inputStockCode);
                         StockInformation stockInformation = new StockInformation();
-                        stockInformation.setStockCode(stream);
+                        stockInformation.setStockCode(inputStockCode);
                         if (stock != null) {
                             stockInformation = getRequiredStockData(stock, stockInformation);
                         } else {
@@ -160,14 +160,14 @@ public class StocksController {
     }
 
     /**
-     * @param stream
+     * @param stockCode
      * @return
      */
     @Cacheable("stocksCache")
-    private Stock getStockInformationFromYahoo(String stream) {
+    private Stock getStockInformationFromYahoo(String stockCode) {
         try {
-            Stock stock = YahooFinance.get(stream);
-            logger.debug("finance data fetched for stock code: " + stream);
+            Stock stock = YahooFinance.get(stockCode);
+            logger.debug("finance data fetched for stock code: " + stockCode);
             return stock;
         } catch (IOException e) {
             logger.error("Error while fetching finance data from Yahoo finance");
