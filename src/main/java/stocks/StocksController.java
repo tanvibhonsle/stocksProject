@@ -42,8 +42,6 @@ public class StocksController {
 
     private static final BigDecimal ERROR_VALUE = BigDecimal.valueOf(-1.0);
 
-    private static ExecutorService executor = Executors.newFixedThreadPool(20);
-
     @Value("${app.inputFilePath}")
     private String inputFilePath;
 
@@ -58,7 +56,7 @@ public class StocksController {
 
             //List that stores the required data from the Yahoo API
             List<StockInformation> stockData = new ArrayList<>();
-
+            ExecutorService executor = Executors.newFixedThreadPool(20);
             //Executor service for parallel processing of requests to Yahoo finance
             Set<Callable<String>> callableList = new HashSet<Callable<String>>();
             inputStockCodesStream.forEach(inputStockCode -> {
